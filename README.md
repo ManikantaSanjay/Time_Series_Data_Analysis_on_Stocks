@@ -29,7 +29,7 @@ Navigate to the following link to view the .csv files of the respective companie
 
 #### Task 4 : Analysing the Monthly Mean of Close Column.
 
-#### Task 5 : Analysing the Correlation between the Stock Prices of these Tech companies(Amazon,Apple,Google,Microsoft) 
+#### Task 5 : Analysing the Correlation between the Stock Prices of these Tech companies. 
 
 #### Task 6 : Analysing the Daily Return of Each Stock & Their Co-Relation
 
