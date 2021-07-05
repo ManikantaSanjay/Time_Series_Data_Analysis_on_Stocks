@@ -1,5 +1,7 @@
 # Time_Series_Data_Analysis_on_Stocks
-Time Series Data Analysis on Daily Stock Prices of the following companies(Apple, Microsoft, Google, Amazon) for a span of 5 years.
+We are trying to perform Exploratory Time Series Data Analysis on Daily Stock Prices of the following companies
+
+(Apple, Microsoft, Google, Amazon) for a span of 5 years.(2013-2018)
 ## :one: Importing Libraries
 The Following Libraries are imported :
 
@@ -12,8 +14,6 @@ The Following Libraries are imported :
 #### 4> Matplotlib
 
 ## :two: About the Dataset
-
-#### We are trying to analyse the five year(2013-2018) stock prices of Amazon, Apple, Google, Microsoft .
 
 Navigate to the following link to view the .csv files of the respective companies. :point_down:
 
