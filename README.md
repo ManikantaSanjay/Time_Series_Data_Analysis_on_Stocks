@@ -1,7 +1,8 @@
 # Time_Series_Data_Analysis_on_Stocks
-We are trying to perform Exploratory Time Series Data Analysis on Daily Stock Prices of the following companies
+## Description:
+Performing Exploratory Time Series Data Analysis on Daily Stock Prices of the following companies
+(<b>Apple, Microsoft, Google, Amazon</b>) for a span of <b>5 years</b> (2013-2018).
 
-(Apple, Microsoft, Google, Amazon) for a span of 5 years.(2013-2018)
 ## :one: Importing Libraries
 The Following Libraries are imported :
 
