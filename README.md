@@ -3,8 +3,7 @@
 Performing Exploratory Time Series Data Analysis on Daily Stock Prices of the following companies
 (<b>Apple, Microsoft, Google, Amazon</b>) for a span of <b>5 years</b> (2013-2018).
 
-## :one: Importing Libraries
-The Following Libraries are imported :
+## :one: Libraries Used
 
 #### 1> Pandas
 
@@ -14,9 +13,9 @@ The Following Libraries are imported :
 
 #### 4> Matplotlib
 
-## :two: About the Dataset
+## :two: Dataset
 
-Navigate to the following link to view the .csv files of the respective companies. :point_down:
+Navigate to the below link to view the .csv files of the respective companies. 
 
 #### https://github.com/ManikantaSanjay/Time_Series_Data_Analysis_on_Stocks/tree/main/individual_stocks_5yr :link:
 
@@ -36,7 +35,7 @@ Navigate to the following link to view the .csv files of the respective companie
 
 #### Task 7 : Value at Risk Analysis for Apple Stocks
 
-## :four: Jupyter Notebook File :point_down:
+## :four: Link to Jupyter Notebook :point_down:
 
 #### https://github.com/ManikantaSanjay/Time_Series_Data_Analysis_on_Stocks/blob/main/Stock_Price_EDA.ipynb
 
