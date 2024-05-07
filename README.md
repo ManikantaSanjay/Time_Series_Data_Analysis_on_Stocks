@@ -39,4 +39,4 @@ Navigate to the below link to view the .csv files of the respective companies.
 
 #### https://github.com/ManikantaSanjay/Time_Series_Data_Analysis_on_Stocks/blob/main/Stock_Price_EDA.ipynb
 
-## Add a star 🌟 to the repo if u like it.:smiley: Thank You :v:
+## Add a star 🌟 to the repo if u like it.:smiley: Thank You !!
