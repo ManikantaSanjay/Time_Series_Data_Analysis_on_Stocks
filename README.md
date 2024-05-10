@@ -13,6 +13,8 @@ Performing Exploratory Time Series Data Analysis on Daily Stock Prices of the fo
 
 #### 4> Matplotlib
 
+#### 5> MongoDB
+
 ## :two: Dataset
 
 Navigate to the below link to view the .csv files of the respective companies. 
