@@ -13,16 +13,12 @@ import os
 # Load environment variables
 load_dotenv()
 
-
-
 # Assuming you have already calculated your ratios and stored them in suitable variables
 
 # Initialize Dash app
 app = dash.Dash(__name__)
 
-# Define the layout of the Dash app
 app.layout = html.Div([
-    # Dropdown for selecting a stock ticker
     dcc.Dropdown(
         id='ticker-dropdown',
         options=[
@@ -30,29 +26,142 @@ app.layout = html.Div([
             {'label': 'Amazon', 'value': 'AMZN'},
             {'label': 'Google', 'value': 'GOOG'},
             {'label': 'Microsoft', 'value': 'MSFT'},
-            # Add more options for other stocks as needed
+            # Additional options can be added here
         ],
         value='AAPL',  # Default value
         clearable=False,
+        style={'width': '80%', 'margin': 'auto'}
     ),
-    # Graph to display stock and RSI data
-    dcc.Graph(id='stock-graph'),
-    dcc.Graph(id='stochastic-graph'),
-    # Separate Graph to display MACD and Signal line
-    dcc.Graph(id='macd-graph'),
-    dcc.Graph(id='cagr-graph'), 
-    dcc.Graph(id='price-mfi-graph'),
-])
+    html.Div([  # Div to organize input and label
+        html.Label('Enter Period:', style={'margin-right': '10px'}),
+        dcc.Input(
+            id='period-input',
+            type='number',
+            value=14,  # Default value
+            min=1,  # Minimum value
+            max=100,  # Maximum value (set according to your application needs)
+            style={'width': '80px'}
+        )
+    ], style={'width': '80%', 'margin': 'auto', 'display': 'flex', 'justify-content': 'center', 'align-items': 'center', 'margin-bottom': '20px'}),
+    dcc.Graph(id='stock-graph', style={'width': '80%', 'margin': 'auto'}),
+    dcc.Graph(id='stochastic-graph', style={'width': '80%', 'margin': 'auto'}),
+    dcc.Graph(id='macd-graph', style={'width': '80%', 'margin': 'auto'}),
+    dcc.Graph(id='cagr-graph', style={'width': '80%', 'margin': 'auto'}),
+    dcc.Graph(id='price-mfi-graph', style={'width': '80%', 'margin': 'auto'}),
+    dcc.Graph(id='volatility-graph', style={'width': '80%', 'margin': 'auto'}),
+    dcc.Graph(id='candlestick-pattern-graph', style={'width': '80%', 'margin': 'auto'}),
+], style={'width': '100%', 'display': 'flex', 'flex-direction': 'column', 'align-items': 'center'})
+
+@app.callback(
+    Output('candlestick-pattern-graph', 'figure'),
+    [Input('ticker-dropdown', 'value')]
+)
+def update_candlestick_pattern_graph(selected_ticker):
+    # Connect to the database and fetch data
+    client = conn.connect_to_mongodb(os.getenv("URI"))
+    df = ft.fetch_data(client, os.getenv("DATABASE_NAME"), os.getenv("COLLECTION_NAME"), ticker=selected_ticker)
+
+    # Assuming detect_candlestick_patterns function is already defined and imported
+    df = helper.detect_candlestick_patterns(df)
+
+    # Create the candlestick chart
+    fig = go.Figure(data=[go.Candlestick(
+        x=df['Date'],
+        open=df['Open'],
+        high=df['High'],
+        low=df['Low'],
+        close=df['Close'],
+        increasing_line_color='green', decreasing_line_color='red',
+        name='Candlestick'
+    )])
+
+    pattern_colors = {
+    'Doji': '#00FFFF',  # Cyan
+    'Hammer': '#FFA500',  # Orange
+    'Hanging_Man': '#FF00FF',  # Magenta
+    'Bullish_Engulfing': '#008000',  # Green
+    'Bearish_Engulfing': '#FF0000',  # Red
+    'Morning_Star': '#FFFF00',  # Yellow
+    'Evening_Star': '#0000FF'  # Blue
+    }
+
+    # Add annotations for detected patterns
+    annotations = []
+    patterns = ['Doji', 'Hammer', 'Hanging_Man', 'Bullish_Engulfing', 'Bearish_Engulfing', 'Morning_Star', 'Evening_Star']
+    for pattern in patterns:
+        pattern_df = df[df[pattern]]
+        for _, row in pattern_df.iterrows():
+            annotations.append({
+                'x': row['Date'],
+                'y': row['High'],
+                'xref': 'x',
+                'yref': 'y',
+                'text': pattern,
+                'showarrow': True,
+                'arrowhead': 5,
+                'ax': 0,
+                'ay': -30,
+                'bordercolor': '#c7c7c7',
+                'borderwidth': 2,
+                'borderpad': 4,
+                'bgcolor': pattern_colors[pattern],
+                'opacity': 0.8
+            })
+
+    fig.update_layout(
+        title=f'Candlestick Patterns for {selected_ticker}',
+        xaxis_title='Date',
+        yaxis_title='Price',
+        annotations=annotations
+    )
+
+    return fig
+
+
+@app.callback(
+    Output('volatility-graph', 'figure'),
+    [Input('ticker-dropdown', 'value')]
+)
+def update_graph(selected_ticker):
+    # Simulate fetching data
+    # Assume `df` is your DataFrame fetched from a database or CSV
+    
+    
+    # Call the function to calculate historical volatility
+    client = conn.connect_to_mongodb(os.getenv("URI"))
+    df = ft.fetch_data(client, os.getenv("DATABASE_NAME"), os.getenv("COLLECTION_NAME"), ticker=selected_ticker)
+    result_df = sm.calculate_historical_volatility(df)
+    
+    # Plotting the results
+    trace = go.Scatter(
+        x=result_df['YearMonth'],
+        y=result_df['Monthly Volatility'],
+        mode='lines+markers',
+        name='Monthly Volatility'
+    )
+    
+    layout = go.Layout(
+        title=f'Historical Monthly Volatility for {selected_ticker}',
+        xaxis=dict(title='Year-Month'),
+        yaxis=dict(title='Volatility'),
+        hovermode='closest'
+    )
+    
+    return {'data': [trace], 'layout': layout}
 
 @app.callback(
     Output('stochastic-graph', 'figure'),
-    [Input('ticker-dropdown', 'value')]
+    [Input('ticker-dropdown', 'value'),
+     Input('period-input', 'value')]
 )
 
-def update_stochastic_graph(selected_ticker):
+def update_stochastic_graph(selected_ticker, periods):
     client = conn.connect_to_mongodb(os.getenv("URI"))
     df = ft.fetch_data(client, os.getenv("DATABASE_NAME"), os.getenv("COLLECTION_NAME"), ticker=selected_ticker)
-    df1 = sm.calculate_stochastic_oscillator(df)
+
+
+    df1 = sm.calculate_stochastic_oscillator(df, periods=periods)
+    # df1 = sm.calculate_stochastic_oscillator(df)
 
     df1['Date'] = df['Date']
 
@@ -126,14 +235,15 @@ def update_stochastic_graph(selected_ticker):
 
 @app.callback(
     Output('price-mfi-graph', 'figure'),
-    [Input('ticker-dropdown', 'value')]
+    [Input('ticker-dropdown', 'value'),
+     Input('period-input', 'value')]
 )
 
-def update_graph(selected_ticker):
+def update_graph(selected_ticker,periods):
     # Fetch data
     client = conn.connect_to_mongodb(os.getenv("URI"))
     df = ft.fetch_data(client, os.getenv("DATABASE_NAME"), os.getenv("COLLECTION_NAME"), ticker=selected_ticker)
-    df['MFI'] = sm.calculate_mfi(df)
+    df['MFI'] = sm.calculate_mfi(df,period=periods)
 
     # Detect divergences
     df = helper.detect_divergences(df)

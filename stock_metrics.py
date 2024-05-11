@@ -4,7 +4,7 @@ import numpy as np
 
 def calculate_historical_volatility(df, column_name='Close'):
     """
-    Calculate the historical volatility of the closing prices for each month in the last quarter.
+    Calculate the historical volatility of the closing prices for each month across all available data.
 
     Args:
         df (pd.DataFrame): DataFrame containing stock data with 'Date' and 'Close' prices.
@@ -16,29 +16,22 @@ def calculate_historical_volatility(df, column_name='Close'):
     # Ensure the Date column is a datetime type
     df['Date'] = pd.to_datetime(df['Date'])
 
-    # Filter the last quarter months based on the maximum date in the DataFrame
-    max_date = df['Date'].max()
-    start_of_last_quarter = pd.Timestamp(max_date.year, max_date.month - 2, 1) if max_date.month > 2 else pd.Timestamp(max_date.year - 1, 10, 1)
-
-    # Filter data to get the last quarter
-    last_quarter_data = df[df['Date'] >= start_of_last_quarter]
-
     # Calculate the daily logarithmic returns
-    last_quarter_data['Log Returns'] = np.log(last_quarter_data[column_name] / last_quarter_data[column_name].shift(1))
+    df['Log Returns'] = np.log(df[column_name] / df[column_name].shift(1))
     
     # Sort data to ensure chronological order
-    last_quarter_data.sort_values('Date', inplace=True)
+    df.sort_values('Date', inplace=True)
     
-    # Create a period column for grouping
-    last_quarter_data['YearMonth'] = last_quarter_data['Date'].dt.to_period('M')
+    # Create a period column for grouping by month
+    df['YearMonth'] = df['Date'].dt.to_period('M')
 
-    # Calculate and collect results
+    # Group data by ticker and YearMonth, then calculate the standard deviation of the log returns
     results = []
-    grouped = last_quarter_data.groupby(['ticker', 'YearMonth'])
+    grouped = df.groupby(['ticker', 'YearMonth'])
     for (name, year_month), group in grouped:
         vol = group['Log Returns'].std()
         results.append({'Name': name[0], 'YearMonth': str(year_month), 'Monthly Volatility': vol})
-    
+
     return pd.DataFrame(results)
 
 def calculate_stochastic_oscillator(df, periods=14):

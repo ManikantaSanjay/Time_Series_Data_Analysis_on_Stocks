@@ -1,4 +1,5 @@
 import pandas as pd
+import talib
 
 ## Helper functions
 def detect_divergences(df: pd.DataFrame) -> pd.DataFrame:
@@ -37,4 +38,36 @@ def detect_divergences(df: pd.DataFrame) -> pd.DataFrame:
     df['Bull_Div'] = (df['Close'] == df['Price_Low']) & (df['MFI'] != df['MFI_Low'])
     df['Bear_Div'] = (df['Close'] == df['Price_High']) & (df['MFI'] != df['MFI_High'])
 
+    return df
+
+def detect_candlestick_patterns(df):
+    """
+    This function detects various candlestick patterns in a DataFrame and returns
+    the DataFrame with additional columns for each pattern.
+
+    Args:
+    df (pandas.DataFrame): A DataFrame with columns 'Open', 'High', 'Low', 'Close'.
+
+    Returns:
+    pandas.DataFrame: The original DataFrame with additional boolean columns for each detected pattern.
+    """
+    # Ensure the column names match expected pattern by TA-Lib
+    open_prices = df['Open']
+    high_prices = df['High']
+    low_prices = df['Low']
+    close_prices = df['Close']
+    
+    # Detect patterns
+    df['Doji'] = talib.CDLDOJI(open_prices, high_prices, low_prices, close_prices)
+    df['Hammer'] = talib.CDLHAMMER(open_prices, high_prices, low_prices, close_prices)
+    df['Hanging_Man'] = talib.CDLHANGINGMAN(open_prices, high_prices, low_prices, close_prices)
+    df['Bullish_Engulfing'] = talib.CDLENGULFING(open_prices, high_prices, low_prices, close_prices) > 0  # Bullish if positive
+    df['Bearish_Engulfing'] = talib.CDLENGULFING(open_prices, high_prices, low_prices, close_prices) < 0  # Bearish if negative
+    df['Morning_Star'] = talib.CDLMORNINGSTAR(open_prices, high_prices, low_prices, close_prices)
+    df['Evening_Star'] = talib.CDLEVENINGSTAR(open_prices, high_prices, low_prices, close_prices)
+    
+    # Convert numeric results to boolean (0 is no pattern, anything else is a pattern detected)
+    for col in ['Doji', 'Hammer', 'Hanging_Man', 'Morning_Star', 'Evening_Star']:
+        df[col] = df[col] != 0
+    
     return df
