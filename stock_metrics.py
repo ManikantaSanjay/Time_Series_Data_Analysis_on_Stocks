@@ -1,43 +1,6 @@
 from typing import Dict, List, Optional
 import pandas as pd
 import numpy as np
-from pymongo import MongoClient
-import logging
-
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-# Constants
-URI = 'Enter your URI here'
-DATABASE_NAME = 'stock_database'
-COLLECTION_NAME = 'stock_data'
-
-def connect_to_mongodb(uri: str) -> MongoClient:
-    """Create a new MongoDB client and connect to the server."""
-    client = MongoClient(uri)
-    try:
-        client.admin.command('ping')
-        logging.info("Pinged your deployment. You successfully connected to MongoDB!")
-    except Exception as e:
-        logging.error(f"Failed to connect to MongoDB: {e}")
-        raise
-    return client
-
-def fetch_data(client: MongoClient) -> pd.DataFrame:
-    """Fetch stock data from MongoDB and convert to a pandas DataFrame."""
-    db = client[DATABASE_NAME]
-    collection = db[COLLECTION_NAME]
-    documents = list(collection.find({}))
-    all_data_rows = []
-
-    for document in documents:
-        for data in document.get('data', []):
-            data['ticker'] = document.get('ticker', 'Unknown')
-            all_data_rows.append(data)
-
-    df = pd.DataFrame(all_data_rows)
-    return df
-
 
 def calculate_historical_volatility(df, column_name='Close'):
     """
@@ -47,7 +10,7 @@ def calculate_historical_volatility(df, column_name='Close'):
         df (pd.DataFrame): DataFrame containing stock data with 'Date' and 'Close' prices.
         column_name (str): Name of the column containing the close prices. Default is 'Close'.
     
-    Yields:
+    Returns:
         pd.DataFrame: A DataFrame containing the historical volatility for each month and each stock.
     """
     # Ensure the Date column is a datetime type
@@ -64,16 +27,19 @@ def calculate_historical_volatility(df, column_name='Close'):
     last_quarter_data['Log Returns'] = np.log(last_quarter_data[column_name] / last_quarter_data[column_name].shift(1))
     
     # Sort data to ensure chronological order
-    last_quarter_data.sort_values(['ticker', 'Date'], inplace=True)
+    last_quarter_data.sort_values('Date', inplace=True)
     
     # Create a period column for grouping
     last_quarter_data['YearMonth'] = last_quarter_data['Date'].dt.to_period('M')
 
-    # Loop through each group and yield results
+    # Calculate and collect results
+    results = []
     grouped = last_quarter_data.groupby(['ticker', 'YearMonth'])
     for (name, year_month), group in grouped:
         vol = group['Log Returns'].std()
-        yield {'Name': name, 'YearMonth': str(year_month), 'Monthly Volatility': vol}
+        results.append({'Name': name[0], 'YearMonth': str(year_month), 'Monthly Volatility': vol})
+    
+    return pd.DataFrame(results)
 
 def calculate_stochastic_oscillator(df, periods=14):
     """
@@ -91,7 +57,8 @@ def calculate_stochastic_oscillator(df, periods=14):
     df['highest_high'] = df['High'].rolling(window=periods).max()
 
     # Calculate %K
-    df['%K'] = ((df['Close'] - df['lowest_low']) / (df['highest_high'] - df['lowest_low'])) * 100
+    df['%K'] = ((df['Close'] - df['lowest_low']) / 
+            (df['highest_high'] - df['lowest_low']).replace(0, np.nan)) * 100
 
     # Calculate %D as 3-period SMA of %K
     df['%D'] = df['%K'].rolling(window=3).mean()
@@ -101,6 +68,40 @@ def calculate_stochastic_oscillator(df, periods=14):
                             np.where(df['%K'] < 20, 'Oversold', 'Neutral'))
 
     return df[['%K', '%D', 'Status']]
+
+def calculate_mfi(data, period=14):
+    """
+    Calculate the Money Flow Index (MFI).
+
+    Args:
+        data (pd.DataFrame): DataFrame containing 'High', 'Low', 'Close' and 'Volume' columns.
+        period (int): Number of periods to use in the calculation (default is 14).
+
+    Returns:
+        pd.Series: A series containing the Money Flow Index.
+    """
+    # Typical Price
+    data['Typical_Price'] = (data['High'] + data['Low'] + data['Close']) / 3
+
+    # Raw Money Flow
+    data['Raw_Money_Flow'] = data['Typical_Price'] * data['Volume']
+
+    # Money Flow Ratio
+    data['Up_Down'] = data['Typical_Price'].diff()
+    data['Positive_Flow'] = data.apply(lambda x: x['Raw_Money_Flow'] if x['Up_Down'] > 0 else 0, axis=1)
+    data['Negative_Flow'] = data.apply(lambda x: x['Raw_Money_Flow'] if x['Up_Down'] < 0 else 0, axis=1)
+
+    # Sum over the periods
+    data['Positive_Flow_Sum'] = data['Positive_Flow'].rolling(window=period).sum()
+    data['Negative_Flow_Sum'] = data['Negative_Flow'].rolling(window=period).sum()
+
+    # Money Flow Ratio
+    data['Money_Flow_Ratio'] = data['Positive_Flow_Sum'] / data['Negative_Flow_Sum']
+
+    # Money Flow Index
+    data['MFI'] = 100 - (100 / (1 + data['Money_Flow_Ratio']))
+
+    return data['MFI']
 
 def calculate_rsi(df: pd.DataFrame, period: int = 14) -> pd.DataFrame:
     """
@@ -133,41 +134,60 @@ def calculate_rsi(df: pd.DataFrame, period: int = 14) -> pd.DataFrame:
     # Group by ticker and apply RSI calculation
     rsi_values = df.groupby('ticker')['Close'].apply(rsi_calc)
     
-    # Since rsi_values is a Series with a MultiIndex (Date, ticker), we need to re-align it with the original DataFrame
-    # Here we directly assign the values to the 'RSI' column of df
-    df['RSI'] = rsi_values.values  # This directly aligns values by position, avoiding index compatibility issues
 
-    return df
+    return rsi_values.values
 
 
-
-def calculate_cagr(df: pd.DataFrame) -> Dict[str, Optional[float]]:
+def calculate_annual_cagr(df: pd.DataFrame) -> Dict[str, Dict[int, Optional[float]]]:
     """
-    Calculate the Compound Annual Growth Rate (CAGR) for each ticker.
+        Calculates the annual Compound Annual Growth Rate (CAGR) for each stock ticker in the DataFrame.
 
-    Args:
-        df (pd.DataFrame): DataFrame containing stock data with 'Close', 'Date', and 'ticker' columns.
+        Parameters:
+            df (pd.DataFrame): A DataFrame containing columns 'Date', 'ticker', and 'Close', where:
+                - 'Date' is the date of the stock price
+                - 'ticker' is the stock ticker symbol
+                - 'Close' is the closing price of the stock on that date
 
-    Returns:
-        Dict[str, Optional[float]]: A dictionary with tickers as keys and their CAGR as values.
+        Returns:
+            Dict[str, Dict[int, Optional[float]]]: A dictionary with stock tickers as keys and another dictionary as values,
+            where the inner dictionaries map a year to the CAGR for that year. If CAGR cannot be calculated for a year due
+            to insufficient data or other issues, the value is None.
     """
+    # Ensure 'Date' is in datetime format
     df['Date'] = pd.to_datetime(df['Date'])
+    df['Year'] = df['Date'].dt.year  # Extract year for grouping
+
+    # Dictionary to store CAGR results by ticker
     cagr_results = {}
 
     for ticker in df['ticker'].unique():
-        ticker_data = df[df['ticker'] == ticker]
-        ticker_data = ticker_data.sort_values(by='Date')
-        initial_value = ticker_data['Close'].iloc[0]
-        final_value = ticker_data['Close'].iloc[-1]
-        start_date = ticker_data['Date'].iloc[0]
-        end_date = ticker_data['Date'].iloc[-1]
-        delta_years = (end_date - start_date).days / 365.25
+        # Filter data for the current ticker and sort it
+        ticker_data = df[df['ticker'] == ticker].sort_values(by='Date')
 
-        if delta_years > 0 and initial_value > 0:
-            cagr = (final_value / initial_value) ** (1 / delta_years) - 1
-            cagr_results[ticker] = cagr
-        else:
-            cagr_results[ticker] = None
+        # Dictionary to store annual CAGR
+        annual_cagr = {}
+
+        # Group data by year
+        for year, year_data in ticker_data.groupby('Year'):
+            if len(year_data) < 2:
+                # Not enough data points in the year to calculate CAGR
+                annual_cagr[year] = None
+                continue
+
+            # Calculate initial and final values
+            initial_value = year_data['Close'].iloc[0]
+            final_value = year_data['Close'].iloc[-1]
+            # Calculate time delta in years
+            delta_years = (year_data['Date'].iloc[-1] - year_data['Date'].iloc[0]).days / 365.25
+
+            # Calculate CAGR if possible
+            if delta_years > 0 and initial_value > 0:
+                cagr = (final_value / initial_value) ** (1 / delta_years) - 1
+                annual_cagr[year] = cagr
+            else:
+                annual_cagr[year] = None
+
+        cagr_results[ticker] = annual_cagr
 
     return cagr_results
 
@@ -215,44 +235,3 @@ def calculate_macd(df, column_name='Close', slow_period=26, fast_period=12, sign
     result_df = pd.concat(results)
     return result_df
 
-# # Main execution
-# if __name__ == "__main__":
-#     client = connect_to_mongodb(URI)
-#     df = fetch_data(client)
-#     print(df.columns)
-    
-#     cagr_results = calculate_cagr(df)
-
-#     # df is your DataFrame loaded with your stock data
-#     rsi_df = calculate_rsi(df)
-#     print(rsi_df)
-    
-#     monthly_volatilities = calculate_historical_volatility(df)
-    
-
-#     for result in monthly_volatilities:
-#         print(result)
-
-#     for ticker, cagr in cagr_results.items():
-#         if cagr is not None:
-#             logging.info(f"The CAGR for {ticker} is: {cagr:.2%}")
-#         else:
-#             logging.info(f"The CAGR for {ticker} is not calculable.")
-
-#     # Group by 'ticker' and apply the calculation
-#     result_dfs = []
-#     for ticker, group in df.groupby('ticker'):
-#         group = calculate_stochastic_oscillator(group)
-#         group['Ticker'] = ticker  # Add ticker information to distinguish results
-#         result_dfs.append(group)
-
-#     # Combine all results
-#     full_results = pd.concat(result_dfs)
-
-#     # Print or analyze results
-#     print(full_results)
-
-
-    
-#     macd_df = calculate_macd(df, 'Close', 26, 12, 9)
-#     print(macd_df)
