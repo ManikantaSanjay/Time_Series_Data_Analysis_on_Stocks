@@ -1,25 +1,25 @@
 # Time_Series_Data_Analysis_on_Stocks
 ## Description:
-Performing Exploratory Time Series Data Analysis on Daily Stock Prices of the following companies
-(<b>Apple, Microsoft, Google, Amazon</b>) for a span of <b>5 years</b> (2013-2018).
+This repository is dedicated to performing exploratory time series data analysis on daily stock prices of key tech companies: Apple, Microsoft, Google, and Amazon, over a span of 5 years. 
 
-## :one: Libraries Used
+Version 2 : Update - The project includes features for fetching real-time stock data using Yahoo Finance API, storing it in MongoDB, and performing various statistical and financial analyses.
 
-#### 1> Pandas
+## 🛠 Libraries Used
+* Pandas - For data manipulation and analysis
+* Numpy - Support for large, multi-dimensional arrays and matrices
+* Seaborn & Matplotlib - For plotting graphs for data visualization
+* MongoDB - Used for storing fetched stock data
+* yfinance - Used to fetch live stock data
 
-#### 2> Numpy
+## 🗂 Dataset
 
-#### 3> Seaborn
+Explore the historical and the most recent stock data:
 
-#### 4> Matplotlib
+Historical Data: Navigate to the link to view the .csv files for each company https://github.com/ManikantaSanjay/Time_Series_Data_Analysis_on_Stocks/tree/main/individual_stocks_5yr :link:
 
-## :two: Dataset
+Real-time Data: Data is fetched daily using the yfinance library and stored in MongoDB
 
-Navigate to the below link to view the .csv files of the respective companies. 
-
-#### https://github.com/ManikantaSanjay/Time_Series_Data_Analysis_on_Stocks/tree/main/individual_stocks_5yr :link:
-
-## :three: Tasks Performed
+## 📊  Tasks Performed
 
 #### Task 1 : Analysing the Closing Price of all the stocks
 
@@ -35,8 +35,21 @@ Navigate to the below link to view the .csv files of the respective companies.
 
 #### Task 7 : Value at Risk Analysis for Apple Stocks
 
-## :four: Link to Jupyter Notebook :point_down:
+#### Task 8 : Fetch and Update Stock Data Daily: Script to fetch daily stock data from Yahoo Finance and update the MongoDB database.
 
-#### https://github.com/ManikantaSanjay/Time_Series_Data_Analysis_on_Stocks/blob/main/Stock_Price_EDA.ipynb
+#### Task 9: Advanced Financial Calculations:
+* Stochastic Oscillator and RSI (Relative Strength Index) calculations to measure stock momentum.
+* Historical Volatility analysis of closing prices for each month in the last quarter.
+* CAGR (Compound Annual Growth Rate) to measure the mean annual growth rate of investment.
+* MACD (Moving Average Convergence Divergence) to reveal changes in the strength, direction, momentum, and duration of a trend in a stock's price.
 
-## Add a star 🌟 to the repo if u like it.:smiley: Thank You !!
+## ⚙ Setup and Installation
+Ensure you have Python and MongoDB installed on your system. Install the necessary Python libraries using:
+
+```bash
+pip install pandas numpy seaborn matplotlib pymongo yfinance logging
+```
+
+Feel free to fork this repository or contribute by providing suggestions to improve the analysis or adding new features to enhance the stock data exploration.
+
+## Add a star 🌟 to the repo if u like it. 😃 Thank You !!
