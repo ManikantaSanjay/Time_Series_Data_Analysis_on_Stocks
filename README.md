@@ -10,6 +10,7 @@ Version 2 : Update - The project includes features for fetching real-time stock 
 * Seaborn & Matplotlib - For plotting graphs for data visualization
 * MongoDB - Used for storing fetched stock data
 * yfinance - Used to fetch live stock data
+* Plotly Dash - Used to plot stock metrics
 
 ## 🗂 Dataset
 
