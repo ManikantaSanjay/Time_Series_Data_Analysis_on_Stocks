@@ -2,7 +2,8 @@
 ## Description:
 This repository is dedicated to performing exploratory time series data analysis on daily stock prices of key tech companies: Apple, Microsoft, Google, and Amazon, over a span of 5 years. 
 
-Version 2 : Update -  The project includes features for fetching real-time stock data using Yahoo Finance API, storing it in MongoDB, and performing various statistical and financial analyses. Additionally, it now features an interactive web-based dashboard built with Dash that allows for dynamic visualization and deeper analysis of stock data.
+## Update v2:  
+The project now includes features for fetching real-time stock data using Yahoo Finance API, storing it in MongoDB, and performing various statistical and financial analyses. Additionally, it now features an interactive web-based dashboard built with Dash that allows for dynamic visualization and deeper analysis of stock data.
 
 ## 🛠 Libraries Used
 * Pandas - For data manipulation and analysis
@@ -38,9 +39,10 @@ Real-time Data: Data is fetched daily using the yfinance library and stored in M
 
 #### Task 7 : Value at Risk Analysis for Apple Stocks
 
+### Update v2:
 #### Task 8 : Fetch and Update Stock Data Daily: Script to fetch daily stock data from Yahoo Finance and update the MongoDB database.
 
-#### Task 9: Advanced Financial Calculations:
+#### Task 9: Advanced Financial Calculations/Technical Indicators:
 * Stochastic Oscillator and RSI (Relative Strength Index) calculations to measure stock momentum.
 * Historical Volatility analysis of closing prices for each month.
 * CAGR (Compound Annual Growth Rate) to measure the mean annual growth rate of investment.
@@ -48,6 +50,8 @@ Real-time Data: Data is fetched daily using the yfinance library and stored in M
 * Advanced Candlestick pattern detection for strategic trading insights.
 * Analysis of Money Flow Index (MFI) to identify overbought or oversold conditions.
 * Detection of divergences between price movements and MFI, highlighting potential reversal points.
+
+#### Task 10: Create dynamic dashboards using Plotly Dash to visualize each of the technical indicators
   
 
 ## ⚙ Setup and Installation
