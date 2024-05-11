@@ -2,7 +2,7 @@
 ## Description:
 This repository is dedicated to performing exploratory time series data analysis on daily stock prices of key tech companies: Apple, Microsoft, Google, and Amazon, over a span of 5 years. 
 
-Version 2 : Update - The project includes features for fetching real-time stock data using Yahoo Finance API, storing it in MongoDB, and performing various statistical and financial analyses.
+Version 2 : Update -  The project includes features for fetching real-time stock data using Yahoo Finance API, storing it in MongoDB, and performing various statistical and financial analyses. Additionally, it now features an interactive web-based dashboard built with Dash that allows for dynamic visualization and deeper analysis of stock data.
 
 ## 🛠 Libraries Used
 * Pandas - For data manipulation and analysis
@@ -10,7 +10,9 @@ Version 2 : Update - The project includes features for fetching real-time stock 
 * Seaborn & Matplotlib - For plotting graphs for data visualization
 * MongoDB - Used for storing fetched stock data
 * yfinance - Used to fetch live stock data
-* Plotly Dash - Used to plot stock metrics
+* Dash: Used for building web-based application dashboards.
+* TA-Lib: For calculating technical indicators
+* Plotly: For creating interactive plots.
 
 ## 🗂 Dataset
 
@@ -40,16 +42,22 @@ Real-time Data: Data is fetched daily using the yfinance library and stored in M
 
 #### Task 9: Advanced Financial Calculations:
 * Stochastic Oscillator and RSI (Relative Strength Index) calculations to measure stock momentum.
-* Historical Volatility analysis of closing prices for each month in the last quarter.
+* Historical Volatility analysis of closing prices for each month.
 * CAGR (Compound Annual Growth Rate) to measure the mean annual growth rate of investment.
 * MACD (Moving Average Convergence Divergence) to reveal changes in the strength, direction, momentum, and duration of a trend in a stock's price.
+* Advanced Candlestick pattern detection for strategic trading insights.
+* Analysis of Money Flow Index (MFI) to identify overbought or oversold conditions.
+* Detection of divergences between price movements and MFI, highlighting potential reversal points.
+  
 
 ## ⚙ Setup and Installation
 Ensure you have Python and MongoDB installed on your system. Install the necessary Python libraries using:
 
 ```bash
-pip install pandas numpy seaborn matplotlib pymongo yfinance logging
+pip install pandas numpy seaborn matplotlib pymongo yfinance dash plotly talib
+python dashboard.py
 ```
+
 
 Feel free to fork this repository or contribute by providing suggestions to improve the analysis or adding new features to enhance the stock data exploration.
 
